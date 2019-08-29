@@ -19,6 +19,9 @@ export PATH=${JDK8_DIR}/bin:${PATH}
 
 PYTHON_DIR=${OPT_DIR}/miniconda2
 CONDA=Miniconda2-latest-Linux-x86_64.sh
+samtools_version="1.9"
+SAMTOOLS_DIR=${OPT_DIR}/miniconda2/samtools
+
 if [[ ! -d ${PYTHON_DIR} ]]; then
 wget -q https://repo.continuum.io/miniconda/${CONDA}\
     && sh ${CONDA} -b -p ${PYTHON_DIR}\
@@ -26,9 +29,10 @@ wget -q https://repo.continuum.io/miniconda/${CONDA}\
     && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install pyvcf==0.6.8\
     && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/conda install --yes -c bioconda pybedtools=0.8.0 bedtools=2.25.0 \
     && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/pip install scipy==1.1.0\
-    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/conda install --yes -c bioconda samtools=1.9 htslib=1.9\
+    && ${PYTHON_DIR}/bin/python ${PYTHON_DIR}/bin/conda install --yes -c bioconda samtools=${samtools_version} htslib=1.9\
     && rm -f ${CONDA}
 fi
+
 
 MAVEN_DIR=${OPT_DIR}/apache-maven-3.5.4
 if [[ ! -d ${MAVEN_DIR} ]]; then
@@ -47,21 +51,6 @@ if [[ ! -d ${BZIP_DIR} ]]; then
     popd
 fi
 
-# Download samtools and index reference
-samtools_version="1.9"
-SAMTOOLS_DIR=${OPT_DIR}/samtools-${samtools_version}
-if [[ ! -d $SAMTOOLS_DIR ]]; then
-    wget -O- https://github.com/samtools/samtools/releases/download/$samtools_version/samtools-$samtools_version.tar.bz2 | tar xfj -
-    pushd ${SAMTOOLS_DIR}
-    C_INCLUDE_PATH_CURRENT=$C_INCLUDE_PATH
-    export C_INCLUDE_PATH=${BZIP_DIR}_install/include:${C_INCLUDE_PATH}
-    make install prefix=${SAMTOOLS_DIR}_install LDFLAGS="-L${BZIP_DIR}_install/lib"
-    pushd htslib-1.9
-    make install prefix=../../htslib-1.9_install LDFLAGS="-L${BZIP_DIR}_install/lib"
-    popd
-    popd
-    export C_INCLUDE_PATH=$C_INCLUDE_PATH_CURRENT
-fi
 
 # Download ART
 ART_DIR=${OPT_DIR}/ART
